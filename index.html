@@ -166,9 +166,16 @@
             const name = document.getElementById('name').value;
             const content = document.getElementById('content').value;
 
+            console.log('=== 편지 보내기 시작 ===');
+            console.log('이름:', name);
+            console.log('내용:', content);
+            console.log('색상:', color);
+            console.log('Supabase 객체:', supabase);
+
             // Supabase 저장 시도
             if (supabase) {
                 try {
+                    console.log('Supabase INSERT 시도...');
                     const { data, error } = await supabase
                         .from('letters')
                         .insert({
@@ -180,14 +187,18 @@
 
                     if (error) {
                         console.error('저장 오류:', error);
+                        alert('저장 오류: ' + error.message);
                     } else {
                         console.log('편지 저장 완료:', data);
+                        alert('편지가 저장되었습니다!');
                     }
                 } catch (e) {
-                    console.error('예외:', e);
+                    console.error('예외 발생:', e);
+                    alert('예외: ' + e.message);
                 }
             } else {
                 console.warn('Supabase 연결 안됨');
+                alert('Supabase 연결이 안 되어 있습니다');
             }
 
             // 화면 전환
