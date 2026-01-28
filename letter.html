@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유리병 편지</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background: linear-gradient(180deg, #fce4ec 0%, #b3e5fc 50%, #81d4fa 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .screen { display: none; min-height: 100vh; padding: 20px; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+        h1 { font-size: 3rem; color: #5d4e6d; margin-bottom: 10px; }
+        p { color: #7d6e8d; margin-bottom: 30px; text-align: center; line-height: 1.8; }
+
+        .btn {
+            padding: 15px 40px; font-size: 1.1rem; border: none; border-radius: 30px;
+            cursor: pointer; transition: transform 0.3s; margin: 5px;
+        }
+        .btn:hover { transform: translateY(-3px); }
+        .btn-main { background: linear-gradient(135deg, #a8d8ea, #aa96da); color: white; }
+        .btn-back { background: #e8e4d9; color: #666; }
+        .btn-next { background: linear-gradient(135deg, #fcb69f, #ee9ca7); color: white; }
+
+        /* 편지 */
+        .letter-box {
+            background: #fffef5; width: 90%; max-width: 500px; padding: 30px;
+            border-radius: 5px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        .letter-box h2 { font-size: 1.5rem; color: #5d4e6d; margin-bottom: 20px; text-align: center; }
+        textarea {
+            width: 100%; height: 200px; border: none; background: transparent;
+            font-size: 1.1rem; line-height: 1.8; resize: none; outline: none;
+        }
+        .sender { display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+        .sender input {
+            width: 120px; padding: 8px; border: none; border-bottom: 2px dashed #aa96da;
+            background: transparent; font-size: 1rem; text-align: center; outline: none;
+        }
+        .actions { margin-top: 20px; text-align: center; }
+
+        /* 유리병 */
+        .bottles { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; margin: 30px 0; }
+        .bottle { cursor: pointer; transition: transform 0.3s; padding: 10px; border-radius: 10px; }
+        .bottle:hover { transform: scale(1.1); }
+        .bottle.selected { transform: scale(1.15); background: rgba(255,255,255,0.5); }
+        .bottle svg { width: 60px; height: 100px; }
+        .bottle span { display: block; text-align: center; font-size: 0.85rem; color: #666; margin-top: 5px; }
+
+        /* 바다 */
+        #ocean { background: linear-gradient(180deg, #e1f5fe 0%, #4fc3f7 40%, #0288d1 100%); position: relative; overflow: hidden; }
+        .wave {
+            position: absolute; bottom: 0; width: 200%; height: 100px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120'%3E%3Cpath fill='%234fc3f7' d='M0,60 C150,120 350,0 600,60 C850,120 1050,0 1200,60 L1200,120 L0,120 Z'/%3E%3C/svg%3E") repeat-x;
+            animation: wave 8s linear infinite;
+        }
+        @keyframes wave { to { transform: translateX(-50%); } }
+
+        .floating-bottle {
+            position: absolute; top: 40%; left: 50%; transform: translateX(-50%);
+            animation: float 2s ease-in-out infinite, drift 12s linear forwards;
+        }
+        @keyframes float { 0%,100% { transform: translateX(-50%) rotate(-5deg); } 50% { transform: translateX(-50%) rotate(5deg) translateY(-10px); } }
+        @keyframes drift { to { left: 120%; } }
+
+        .message { text-align: center; margin-bottom: 30px; }
+        .message h2 { font-size: 2rem; color: #5d4e6d; }
+    </style>
+</head>
+<body>
+    <!-- 메인 화면 -->
+    <div id="main" class="screen active">
+        <h1>유리병 편지</h1>
+        <p>마음을 담은 편지를 유리병에 넣어<br>끝없는 바다로 흘려보내세요</p>
+        <button class="btn btn-main" onclick="go('letter')">편지 쓰러 가기</button>
+    </div>
+
+    <!-- 편지 작성 -->
+    <div id="letter" class="screen">
+        <div class="letter-box">
+            <h2>소중한 편지를 써주세요</h2>
+            <textarea id="content">이 편지는 500년 전 영국에서 시작되어 한 바퀴를 돌면 소원이 이루어진다고 합니다.
+
+당신에게도 좋은 일이 생기길 바라며...</textarea>
+            <div class="sender">
+                <span>보내는 사람:</span>
+                <input type="text" id="name" placeholder="이름">
+            </div>
+            <div class="actions">
+                <button class="btn btn-back" onclick="go('main')">돌아가기</button>
+                <button class="btn btn-next" onclick="toLetter()">편지 완성</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 유리병 선택 -->
+    <div id="bottles" class="screen">
+        <h1>유리병을 골라주세요</h1>
+        <div class="bottles">
+            <div class="bottle selected" onclick="pick(this,'#a8d8ea')">
+                <svg viewBox="0 0 60 100"><rect x="22" y="2" width="16" height="12" rx="2" fill="#d4a574"/><path d="M15 18 Q15 14 22 14 L38 14 Q45 14 45 18 L45 85 Q45 98 30 98 Q15 98 15 85 Z" fill="#a8d8ea" opacity="0.7"/><rect x="22" y="50" width="12" height="15" fill="#fffef5" rx="1"/></svg>
+                <span>하늘색</span>
+            </div>
+            <div class="bottle" onclick="pick(this,'#fcb69f')">
+                <svg viewBox="0 0 60 100"><rect x="22" y="2" width="16" height="12" rx="2" fill="#d4a574"/><path d="M15 18 Q15 14 22 14 L38 14 Q45 14 45 18 L45 85 Q45 98 30 98 Q15 98 15 85 Z" fill="#fcb69f" opacity="0.7"/><rect x="22" y="50" width="12" height="15" fill="#fffef5" rx="1"/></svg>
+                <span>복숭아색</span>
+            </div>
+            <div class="bottle" onclick="pick(this,'#aa96da')">
+                <svg viewBox="0 0 60 100"><rect x="22" y="2" width="16" height="12" rx="2" fill="#d4a574"/><path d="M15 18 Q15 14 22 14 L38 14 Q45 14 45 18 L45 85 Q45 98 30 98 Q15 98 15 85 Z" fill="#aa96da" opacity="0.7"/><rect x="22" y="50" width="12" height="15" fill="#fffef5" rx="1"/></svg>
+                <span>라벤더</span>
+            </div>
+            <div class="bottle" onclick="pick(this,'#a8e6cf')">
+                <svg viewBox="0 0 60 100"><rect x="22" y="2" width="16" height="12" rx="2" fill="#d4a574"/><path d="M15 18 Q15 14 22 14 L38 14 Q45 14 45 18 L45 85 Q45 98 30 98 Q15 98 15 85 Z" fill="#a8e6cf" opacity="0.7"/><rect x="22" y="50" width="12" height="15" fill="#fffef5" rx="1"/></svg>
+                <span>민트색</span>
+            </div>
+        </div>
+        <div>
+            <button class="btn btn-back" onclick="go('letter')">편지 수정</button>
+            <button class="btn btn-next" onclick="send()">바다로 보내기</button>
+        </div>
+    </div>
+
+    <!-- 바다 -->
+    <div id="ocean" class="screen">
+        <div class="message">
+            <h2>편지가 떠나갑니다...</h2>
+            <p id="bye">누군가에게 닿기를 바라며</p>
+        </div>
+        <div class="floating-bottle" id="float"></div>
+        <div class="wave"></div>
+        <button class="btn btn-main" style="position:absolute;bottom:15%;z-index:10" onclick="restart()">새 편지 쓰기</button>
+    </div>
+
+    <script>
+        // 기본 변수
+        let color = '#a8d8ea';
+        let supabase = null;
+
+        // 화면 전환
+        function go(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // 편지 완성 버튼
+        function toLetter() {
+            if (!document.getElementById('content').value.trim()) return alert('편지를 써주세요!');
+            if (!document.getElementById('name').value.trim()) return alert('이름을 입력해주세요!');
+            go('bottles');
+        }
+
+        // 병 선택
+        function pick(el, c) {
+            document.querySelectorAll('.bottle').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+            color = c;
+        }
+
+        // 바다로 보내기
+        async function send() {
+            const name = document.getElementById('name').value;
+            const content = document.getElementById('content').value;
+
+            // Supabase 저장 시도
+            if (supabase) {
+                try {
+                    const { data, error } = await supabase
+                        .from('letters')
+                        .insert({
+                            content: content,
+                            sender_name: name,
+                            bottle_color: color
+                        })
+                        .select();
+
+                    if (error) {
+                        console.error('저장 오류:', error);
+                    } else {
+                        console.log('편지 저장 완료:', data);
+                    }
+                } catch (e) {
+                    console.error('예외:', e);
+                }
+            } else {
+                console.warn('Supabase 연결 안됨');
+            }
+
+            // 화면 전환
+            document.getElementById('bye').innerHTML = `<strong>${name}</strong>님의 편지가 바다를 떠다닙니다`;
+            document.getElementById('float').innerHTML = `<svg viewBox="0 0 60 100" style="width:50px"><rect x="22" y="2" width="16" height="12" rx="2" fill="#d4a574"/><path d="M15 18 Q15 14 22 14 L38 14 Q45 14 45 18 L45 85 Q45 98 30 98 Q15 98 15 85 Z" fill="${color}" opacity="0.8"/><rect x="22" y="50" width="12" height="15" fill="#fffef5" rx="1"/></svg>`;
+            go('ocean');
+        }
+
+        // 새 편지 쓰기
+        function restart() {
+            document.getElementById('float').style.animation = 'none';
+            document.getElementById('float').offsetHeight;
+            document.getElementById('float').style.animation = '';
+            document.getElementById('content').value = '이 편지는 500년 전 영국에서 시작되어 한 바퀴를 돌면 소원이 이루어진다고 합니다.\n\n당신에게도 좋은 일이 생기길 바라며...';
+            document.getElementById('name').value = '';
+            go('main');
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase 초기화 (별도 스크립트)
+        try {
+            const SUPABASE_URL = 'https://vbcnsffswazcyfogjhqt.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiY25zZmZzd2F6Y3lmb2dqaHF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NjczMjUsImV4cCI6MjA4NTE0MzMyNX0.6KI_avZsn2z2nTrNeMfSkWndtTbr0kOIS--vASCZRBk';
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase 연결 성공');
+        } catch (e) {
+            console.error('Supabase 초기화 실패:', e);
+        }
+    </script>
+</body>
+</html>
