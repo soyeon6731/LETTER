@@ -8,7 +8,11 @@
       "mcp__supabase__apply_migration",
       "mcp__supabase__get_project_url",
       "mcp__supabase__get_publishable_keys",
-      "mcp__supabase__execute_sql"
+      "mcp__supabase__execute_sql",
+      "Bash(gh auth:*)",
+      "Bash(git push:*)",
+      "Bash(git mv:*)",
+      "Bash(git commit:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
