@@ -136,10 +136,17 @@
         <button class="btn btn-main" style="position:absolute;bottom:15%;z-index:10" onclick="restart()">새 편지 쓰기</button>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        // Supabase 설정
+        const SUPABASE_URL = 'https://vbcnsffswazcyfogjhqt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiY25zZmZzd2F6Y3lmb2dqaHF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NjczMjUsImV4cCI6MjA4NTE0MzMyNX0.6KI_avZsn2z2nTrNeMfSkWndtTbr0kOIS--vASCZRBk';
+
+        // Supabase 클라이언트 초기화
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         // 기본 변수
         let color = '#a8d8ea';
-        let supabase = null;
 
         // 화면 전환
         function go(id) {
@@ -163,45 +170,25 @@
 
         // 바다로 보내기
         async function send() {
-            const name = document.getElementById('name').value;
-            const content = document.getElementById('content').value;
+            const name = document.getElementById('name').value.trim();
+            const content = document.getElementById('content').value.trim();
 
-            console.log('=== 편지 보내기 시작 ===');
-            console.log('이름:', name);
-            console.log('내용:', content);
-            console.log('색상:', color);
-            console.log('Supabase 객체:', supabase);
+            // Supabase에 저장
+            const { error } = await supabase
+                .from('letters')
+                .insert({
+                    content: content,
+                    sender_name: name,
+                    bottle_color: color
+                });
 
-            // Supabase 저장 시도
-            if (supabase) {
-                try {
-                    console.log('Supabase INSERT 시도...');
-                    const { data, error } = await supabase
-                        .from('letters')
-                        .insert({
-                            content: content,
-                            sender_name: name,
-                            bottle_color: color
-                        })
-                        .select();
-
-                    if (error) {
-                        console.error('저장 오류:', error);
-                        alert('저장 오류: ' + error.message);
-                    } else {
-                        console.log('편지 저장 완료:', data);
-                        alert('편지가 저장되었습니다!');
-                    }
-                } catch (e) {
-                    console.error('예외 발생:', e);
-                    alert('예외: ' + e.message);
-                }
-            } else {
-                console.warn('Supabase 연결 안됨');
-                alert('Supabase 연결이 안 되어 있습니다');
+            if (error) {
+                console.error('저장 실패:', error);
+                alert('편지 저장에 실패했습니다: ' + error.message);
+                return;
             }
 
-            // 화면 전환
+            // 저장 성공 시 화면 전환
             document.getElementById('bye').innerHTML = `<strong>${name}</strong>님의 편지가 바다를 떠다닙니다`;
             document.getElementById('float').innerHTML = `<svg viewBox="0 0 60 100" style="width:50px"><rect x="22" y="2" width="16" height="12" rx="2" fill="#d4a574"/><path d="M15 18 Q15 14 22 14 L38 14 Q45 14 45 18 L45 85 Q45 98 30 98 Q15 98 15 85 Z" fill="${color}" opacity="0.8"/><rect x="22" y="50" width="12" height="15" fill="#fffef5" rx="1"/></svg>`;
             go('ocean');
@@ -215,18 +202,6 @@
             document.getElementById('content').value = '이 편지는 500년 전 영국에서 시작되어 한 바퀴를 돌면 소원이 이루어진다고 합니다.\n\n당신에게도 좋은 일이 생기길 바라며...';
             document.getElementById('name').value = '';
             go('main');
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // Supabase 초기화 (별도 스크립트)
-        try {
-            const SUPABASE_URL = 'https://vbcnsffswazcyfogjhqt.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZiY25zZmZzd2F6Y3lmb2dqaHF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1NjczMjUsImV4cCI6MjA4NTE0MzMyNX0.6KI_avZsn2z2nTrNeMfSkWndtTbr0kOIS--vASCZRBk';
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('Supabase 연결 성공');
-        } catch (e) {
-            console.error('Supabase 초기화 실패:', e);
         }
     </script>
 </body>
